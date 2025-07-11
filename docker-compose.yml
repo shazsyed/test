@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    image: ssrf-lab-ui
+    container_name: ssrf-lab-ui
+    command: sh -c "npm run build && npm run start:prod"
+    ports:
+      - "3000:3000"
+      - "4001:4001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db
+      - FLAG_CHALLENGE1=flag{your-flag-here}
+      - FLAG_CHALLENGE2=flag{another-flag}
+      - FLAG_CHALLENGE3=flag{your-flag-here}
+      - FLAG_CHALLENGE4=flag{your-flag-here}
+      - NEXT_PUBLIC_SOCKET_URL=http://google.com:4001
+    volumes:
+      - ./prisma:/app/prisma # Persist SQLite DB
+      # - ./:/app           # Uncomment for live reload in development
+    restart: unless-stopped
+    # For production, consider using a real DB instead of SQLite 

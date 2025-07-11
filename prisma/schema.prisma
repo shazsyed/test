@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ChallengeLock {
+  id        String @id
+  locked    Boolean
+}
+
+model LeaderboardUser {
+  id        String @id @default(uuid())
+  name      String @unique
+  avatar    String
+  score     Int
+}
+
+model ChallengeSubmission {
+  id        String   @id @default(uuid())
+  userName  String
+  challengeId String
+  selectedLine Int
+  correct   Boolean
+  createdAt DateTime @default(now())
+}
+
+model FlagSubmission {
+  id          String   @id @default(uuid())
+  userName    String
+  challengeId String
+  flag        String
+  correct     Boolean
+  createdAt   DateTime @default(now())
+}
