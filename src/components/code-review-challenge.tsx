@@ -418,21 +418,59 @@ function Leaderboard({ currentUser }: { currentUser: { name: string; avatar: str
   const inTop = users.some(u => u.name === currentUser.name);
   const displayUsers = inTop ? users : [...users, currentUser];
 
+  // Medal icons for top 3
+  const medalIcons = [
+    <span key="gold" aria-label="1st" className="text-2xl mr-2">🥇</span>,
+    <span key="silver" aria-label="2nd" className="text-2xl mr-2">🥈</span>,
+    <span key="bronze" aria-label="3rd" className="text-2xl mr-2">🥉</span>,
+  ];
+
   return (
-    <div className="bg-white rounded-lg shadow p-4 w-full max-w-md mx-auto mt-6 md:mt-0 md:ml-8 border border-gray-100">
-      <h3 className="text-lg font-bold mb-3 text-center flex items-center justify-center gap-2">
+    <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md mx-auto mt-6 md:mt-0 md:ml-8 border border-gray-100">
+      <h3 className="text-2xl font-extrabold mb-5 text-center flex items-center justify-center gap-2 tracking-tight">
         <span>🏆</span> Leaderboard
       </h3>
       <ul className="space-y-2">
-        {displayUsers.map((user, idx) => (
-          <li key={user.name} className={`flex items-center justify-between px-3 py-2 rounded ${user.name === currentUser.name ? "bg-blue-50 font-semibold" : ""}`}>
-            <div className="flex items-center gap-2">
-              <span className="text-xl select-none" aria-label="avatar">{user.avatar}</span>
-              <span className="truncate max-w-[160px]">{user.name}</span>
-            </div>
-            <span className="text-blue-700 font-bold">{user.score}</span>
-          </li>
-        ))}
+        {displayUsers.map((user, idx) => {
+          const isCurrent = user.name === currentUser.name;
+          const isTop5 = idx < 5;
+          let positionIcon = null;
+          let positionClass = "";
+          let badge = null;
+
+          if (idx < 3) {
+            positionIcon = medalIcons[idx];
+            positionClass = [
+              "bg-gradient-to-r from-yellow-100 to-yellow-50 border-yellow-300",
+              "bg-gradient-to-r from-gray-200 to-gray-50 border-gray-300",
+              "bg-gradient-to-r from-amber-200 to-amber-50 border-amber-300"
+            ][idx];
+          } else if (isTop5) {
+            badge = (
+              <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold border border-blue-200">Top 5</span>
+            );
+            positionClass = "bg-blue-50 border-blue-200";
+          }
+
+          return (
+            <li
+              key={user.name}
+              className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${positionClass} ${isCurrent && !isTop5 ? "ring-2 ring-blue-400 bg-blue-50 font-bold" : ""} ${isCurrent ? "shadow-md" : ""}`}
+              style={{ boxShadow: isCurrent ? '0 2px 8px 0 rgba(59,130,246,0.08)' : undefined }}
+            >
+              <div className="flex items-center gap-3">
+                {positionIcon}
+                <span className="text-xl select-none" aria-label="avatar">{user.avatar}</span>
+                <span className={`truncate max-w-[120px] text-base ${isCurrent ? "text-blue-900" : "text-gray-800"}`}>{user.name}</span>
+                {badge}
+                {isCurrent && !isTop5 && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-200 text-blue-900 rounded-full text-xs font-semibold border border-blue-300">You</span>
+                )}
+              </div>
+              <span className={`text-lg font-bold ${idx === 0 ? "text-yellow-600" : idx === 1 ? "text-gray-500" : idx === 2 ? "text-amber-700" : "text-blue-700"}`}>{user.score}</span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -952,9 +990,9 @@ export default function CodeReviewChallenge() {
                           <AlertTriangle className="h-5 w-5 text-orange-500" />
                           {selectedChallenge.title}
                         </CardTitle>
-                        <CardDescription className="mt-2">{selectedChallenge.description}</CardDescription>
+                        <CardDescription className="mt-2 text-sm">{selectedChallenge.description}</CardDescription>
                       </div>
-                      <span className="inline-block bg-blue-100 text-blue-800 text-sm font-semibold px-2 py-1 rounded-full">Attempts remaining: {attemptsRemaining}</span>
+                      <span className="flex bg-blue-100 text-blue-800 text-sm font-semibold px-2 py-1 w-28 rounded-full items-center">Attempts: {attemptsRemaining}</span>
                     </div>
                   </CardHeader>
                   <CardContent>
