@@ -12,6 +12,8 @@ export const sessionOptions: SessionOptions = {
   password: SESSION_SECRET,
   cookieOptions: {
     maxAge: 60 * 60 * 24, // 1 day
+  // Set secure to false because we're on http (not https)
+    secure: false,
   },
 };
 
