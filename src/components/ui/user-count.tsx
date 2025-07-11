@@ -21,7 +21,8 @@ export const UserCount: React.FC<{ isAdmin?: boolean }> = ({ isAdmin = false }) 
     if (typeof window === 'undefined') return;
     let id = localStorage.getItem(USER_ID_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      // Simple generic random string generator (not cryptographically secure)
+      id = Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
       localStorage.setItem(USER_ID_KEY, id);
     }
     setUserId(id);
