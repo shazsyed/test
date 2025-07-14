@@ -8,6 +8,7 @@ export interface Challenge {
   hints?: string[]
   explanations: { [lineNumber: number]: string }
   flag?: string
+  labUrl?: string
 }
 
 export type Difficulty = "beginner" | "intermediate" | "advanced"

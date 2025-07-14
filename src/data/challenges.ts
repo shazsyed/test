@@ -15,7 +15,8 @@ export const challenges: Challenge[] = [
     "explanations": {
       3: "Good work"
     },
-    "code": "@GetMapping(\"/hello-world\")\npublic ResponseEntity<String> helloWorld() {\n    return ResponseEntity.ok(\"I am vulnerable line!\");\n}"
+    "code": "@GetMapping(\"/hello-world\")\npublic ResponseEntity<String> helloWorld() {\n    return ResponseEntity.ok(\"I am vulnerable line!\");\n}",
+    labUrl: "https://google.com"
   },  
   // BEGINNER CHALLENGES
   {
@@ -41,7 +42,8 @@ export const challenges: Challenge[] = [
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
-    }`
+    }`,
+    labUrl: "http://localhost:8888/open-door?url=here"
   },
   {
     id: "CHALLENGE2",
@@ -73,7 +75,8 @@ export const challenges: Challenge[] = [
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
-    }`
+    }`,
+    labUrl: "http://localhost:8888/bypass-basic?url=here"
   },
 
   {
@@ -120,7 +123,8 @@ export const challenges: Challenge[] = [
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
-    }`
+    }`,
+    labUrl: "http://localhost:8888/sixth-sense?url=here"
   },
   {
     id: "CHALLENGE4",
@@ -164,6 +168,7 @@ public ResponseEntity<String> fetchDns(@RequestParam String url) {
     } catch (Exception e) {
         return ResponseEntity.badRequest().body("Error: " + e.getMessage());
     }
-}`
+}`,
+    labUrl: "http://localhost:8888/name-game?url=here"
   }
 ]

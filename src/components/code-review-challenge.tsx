@@ -1044,7 +1044,7 @@ export default function CodeReviewChallenge() {
                         {!submitted ? (
                           <div className="flex gap-2">
                             <a
-                              href="https://google.com"
+                              href={selectedChallenge.labUrl || '#'}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -1052,6 +1052,7 @@ export default function CodeReviewChallenge() {
                                 type="button"
                                 className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200"
                                 variant="outline"
+                                disabled={!selectedChallenge.labUrl}
                               >
                                 Go to Lab
                               </Button>
