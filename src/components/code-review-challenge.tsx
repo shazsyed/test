@@ -583,6 +583,13 @@ function useAllChallengeTimers() {
   return { timers, timeLefts };
 }
 
+// Utility to generate dynamic lab URL
+function getDynamicLabUrl(labPath: string) {
+  if (typeof window === 'undefined') return '';
+  const { protocol, hostname } = window.location;
+  return `${protocol}//${hostname}:8888${labPath}`;
+}
+
 export default function CodeReviewChallenge() {
   // User state
   const [user, setUser] = useState({ name: "", avatar: "", score: 0 });
@@ -1044,7 +1051,7 @@ export default function CodeReviewChallenge() {
                         {!submitted ? (
                           <div className="flex gap-2">
                             <a
-                              href={selectedChallenge.labUrl || '#'}
+                              href={getDynamicLabUrl(selectedChallenge.labUrl || '') || '#'}
                               target="_blank"
                               rel="noopener noreferrer"
                             >

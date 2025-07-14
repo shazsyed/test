@@ -43,7 +43,7 @@ export const challenges: Challenge[] = [
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }`,
-    labUrl: "http://localhost:8888/open-door?url=here"
+    labUrl: "/open-door?url=here"
   },
   {
     id: "CHALLENGE2",
@@ -76,7 +76,7 @@ export const challenges: Challenge[] = [
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }`,
-    labUrl: "http://localhost:8888/bypass-basic?url=here"
+    labUrl: "/bypass-basic?url=here"
   },
 
   {
@@ -124,7 +124,7 @@ export const challenges: Challenge[] = [
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }`,
-    labUrl: "http://localhost:8888/sixth-sense?url=here"
+    labUrl: "/sixth-sense?url=here"
   },
   {
     id: "CHALLENGE4",
@@ -169,6 +169,6 @@ public ResponseEntity<String> fetchDns(@RequestParam String url) {
         return ResponseEntity.badRequest().body("Error: " + e.getMessage());
     }
 }`,
-    labUrl: "http://localhost:8888/name-game?url=here"
+    labUrl: "/name-game?url=here"
   }
 ]
