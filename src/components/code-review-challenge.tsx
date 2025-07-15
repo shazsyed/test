@@ -718,6 +718,8 @@ export default function CodeReviewChallenge() {
     setSubmitted(false)
     setShowResults(false)
     setShowHints(false)
+    setFlagInput("");
+    setFlagChallengeStatus({ status: 'idle' });
   }
 
   // Check if user has already solved the selected challenge (challenge submission)
@@ -786,7 +788,8 @@ export default function CodeReviewChallenge() {
   const handleSubmit = async () => {
     setSubmitted(true);
     setShowResults(true);
-    if (selectedChallenge && selectedLines.length === 1) {
+    if (selectedChallenge && selectedLines.length > 0) {
+      // Send selectedLines array to backend
       const res = await fetch('/api/submit-challenge', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -794,30 +797,28 @@ export default function CodeReviewChallenge() {
           name: user.name,
           avatar: user.avatar,
           challengeId: selectedChallenge.id,
-          selectedLine: selectedLines[0],
+          selectedLines: selectedLines,
         }),
       });
       const data = await res.json();
-      if (res.status === 423) {
-        setLastSubmissionCorrect(null);
-        setShowResults(true);
-        setAlreadySolved(false);
-        setAttemptsUsed(data.attemptsUsed ?? attemptsUsed);
-        setAttemptsRemaining(data.attemptsRemaining ?? attemptsRemaining);
-        setFlagChallengeStatus({ status: 'error', message: 'This challenge is currently locked by the admin. You cannot submit answers.' });
-        return;
-      }
-      setAttemptsUsed(data.attemptsUsed ?? attemptsUsed);
-      setAttemptsRemaining(data.attemptsRemaining ?? attemptsRemaining);
-      if (res.status === 403 && data.alreadySolved) {
-        setAlreadySolved(true);
-        setLastSubmissionCorrect(null);
-      } else {
-        setUser(u => ({ ...u, score: data.score }));
-        setAlreadySolved(false);
-        setLastSubmissionCorrect(!!data.correct);
-        if (data.correct) setAlreadySolved(true);
-      }
+      // Determine correctness: all vulnerable lines must be selected, and no extra lines
+      const vulnerableLines = selectedChallenge.vulnerableLines;
+      const selectedSet = new Set(selectedLines);
+      const vulnerableSet = new Set(vulnerableLines);
+      const allCorrect =
+        selectedLines.length === vulnerableLines.length &&
+        selectedLines.every((line) => vulnerableSet.has(line));
+      setLastSubmissionCorrect(allCorrect);
+      if (allCorrect) setAlreadySolved(true);
+      else setAlreadySolved(false);
+      // Update attempts from backend response
+      if (typeof data.attemptsUsed === 'number') setAttemptsUsed(data.attemptsUsed);
+      if (typeof data.attemptsRemaining === 'number') setAttemptsRemaining(data.attemptsRemaining);
+      // Optionally, use data.feedback for per-line feedback if needed
+      // Optionally, update score or attempts from backend response
+      // setUser(u => ({ ...u, score: data.score }));
+      // setAttemptsUsed(data.attemptsUsed);
+      // setAttemptsRemaining(data.attemptsRemaining);
     }
   }
 
@@ -835,23 +836,29 @@ export default function CodeReviewChallenge() {
     setShowResults(false)
     setShowHints(false)
     setOpenLabChallenge(null)
+    setFlagInput("");
+    setFlagChallengeStatus({ status: 'idle' });
   }
 
   const toggleLine = (lineNumber: number) => {
     if (submitted) return;
+    const maxSelectable = selectedChallenge?.maxSelectableLines ?? 1;
+    if (!selectedLines.includes(lineNumber) && selectedLines.length >= maxSelectable) {
+      // Optionally, show a warning or ignore further selection
+      return;
+    }
     setSelectedLines((prev) =>
-      prev.includes(lineNumber) ? [] : [lineNumber]
+      prev.includes(lineNumber) ? prev.filter((l) => l !== lineNumber) : [...prev, lineNumber]
     );
   }
 
   const getLineStatus = (lineNumber: number) => {
-    if (!showResults || !selectedChallenge) return null
-    const isSelected = selectedLines.includes(lineNumber)
-    const isVulnerable = selectedChallenge.vulnerableLines.includes(lineNumber)
-    if (isSelected && isVulnerable) return "correct"
-    if (isSelected && !isVulnerable) return "incorrect"
-    if (!isSelected && isVulnerable) return "missed"
-    return null
+    if (!showResults || !selectedChallenge) return null;
+    const isSelected = selectedLines.includes(lineNumber);
+    const isVulnerable = selectedChallenge.vulnerableLines.includes(lineNumber);
+    if (isSelected && isVulnerable) return "correct";
+    if (isSelected && !isVulnerable) return "incorrect";
+    return null;
   }
 
   // Helper to refresh solved states for both challenge and flag
@@ -1019,9 +1026,8 @@ export default function CodeReviewChallenge() {
                           const isSelected = selectedLines.includes(lineNumber);
                           let className = "flex items-center cursor-pointer transition-colors ";
                           if (isSelected && !submitted) className += "bg-blue-900/50 hover:bg-blue-900/70 ";
-                          if (submitted && lastSubmissionCorrect && status === "correct") className += "bg-green-900/50 ";
+                          if (submitted && status === "correct") className += "bg-green-900/50 ";
                           if (submitted && status === "incorrect") className += "bg-red-900/50 ";
-                          if (submitted && lastSubmissionCorrect && status === "missed") className += "bg-yellow-900/50 ";
                           return {
                             className,
                             onClick: () => toggleLine(lineNumber),
@@ -1048,7 +1054,7 @@ export default function CodeReviewChallenge() {
                       </div>
 
                       <div className="space-x-2">
-                        {!submitted ? (
+                        {!submitted || lastSubmissionCorrect === true ? (
                           <div className="flex gap-2">
                             <a
                               href={getDynamicLabUrl(selectedChallenge.labUrl || '') || '#'}

@@ -28,7 +28,7 @@ model ChallengeSubmission {
   id        String   @id @default(uuid())
   userName  String
   challengeId String
-  selectedLine Int
+  selectedLines String // stores JSON array as string
   correct   Boolean
   createdAt DateTime @default(now())
 }

@@ -16,7 +16,8 @@ export const challenges: Challenge[] = [
       3: "Good work"
     },
     "code": "@GetMapping(\"/hello-world\")\npublic ResponseEntity<String> helloWorld() {\n    return ResponseEntity.ok(\"I am vulnerable line!\");\n}",
-    labUrl: "https://google.com"
+    labUrl: "https://google.com",
+    maxSelectableLines: 1
   },  
   // BEGINNER CHALLENGES
   {
@@ -24,10 +25,11 @@ export const challenges: Challenge[] = [
     title: "Open Door",
     description: "Find the obvious SSRF vulnerability in this API",
     difficulty: "beginner",
-    vulnerableLines: [9],
+    vulnerableLines: [6, 9],
     hints: ["Look for places where user input is passed directly without sanitization"],
     explanations: {
-      9: "Using user input to make HTTP request without sanitization will lead to SSRF",
+      6: "Uses unvalidated user input to build the request URL, allowing SSRF.",
+      9: "Sends server-side request to attacker-controlled URL."
     },
     code: `@GetMapping("/open-door")
     public ResponseEntity<String> fetchUrl(@RequestParam String url) {
@@ -43,24 +45,26 @@ export const challenges: Challenge[] = [
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }`,
-    labUrl: "/open-door?url=here"
+    labUrl: "/open-door?url=here",
+    maxSelectableLines: 2
   },
   {
     id: "CHALLENGE2",
     title: "Basic Blacklist",
     description: "The server blocks obvious localhost patterns, but its defenses are naive.",
     difficulty: "beginner",
-    vulnerableLines: [4],
+    vulnerableLines: [3, 9, 12],
     hints: [
       "How many ways can you write the same IP address?",
       "Does 'contains' catch everything that resolves to localhost?"
     ],
     explanations: {
-      4: "The 'contains' check only blocks exact string matches for 'localhost' and '127.0.0.1'. It fails to detect other numeric notations that resolve to localhost, enabling SSRF."
+      3: "The 'contains' check only blocks exact string matches for 'localhost' and '127.0.0.1'. It fails to detect other numeric notations that resolve to localhost, enabling SSRF.",
+      9: "Uses unvalidated user input to build the request URL, allowing SSRF.",
+      12: "Sends server-side request to attacker-controlled URL."
     },
     code: `@GetMapping("/bypass-basic")
     public ResponseEntity<String> fetchDecimal(@RequestParam String url) {
-        // Blacklist approach: block 'localhost' and '127.0.0.1' but allow decimal notation
         if (url.contains("localhost") || url.contains("127.0.0.1")) {
             return ResponseEntity.badRequest().body("Blocked by blacklist: localhost and 127.0.0.1 are not allowed");
         }
@@ -76,7 +80,8 @@ export const challenges: Challenge[] = [
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }`,
-    labUrl: "/bypass-basic?url=here"
+    labUrl: "/bypass-basic?url=here",
+    maxSelectableLines: 3
   },
 
   {
@@ -84,22 +89,22 @@ export const challenges: Challenge[] = [
     title: "Sixth Sense",
     description: "Even with IPv4 blacklisting, IPv6 can be a backdoor.",
     difficulty: "intermediate",
-    vulnerableLines: [15],
+    vulnerableLines: [4, 9, 15, 23],
     hints: [
       "Can loopback still be accessed if formatted in a certain way?",
        "Why is ::1 explicitly allowed?",
        "Notice what addresses are being blocked—and what isn't.",
     ],
     explanations: {
-      15: "This logic explicitly permits requests to the IPv6 loopback (::1), allowing attackers to bypass blacklist filters and trigger SSRF to internal services."
+      4: "Blocks IPv4 and localhost but ignores IPv6 attacks (e.g., ::1), letting SSRF to local services through.",
+      9: "Uses unvalidated user input to build the request URL, allowing SSRF.",
+      15: "This logic explicitly permits requests to the IPv6 loopback (::1), allowing attackers to bypass blacklist filters and trigger SSRF to internal services.",
+      23: "Sends server-side request to attacker-controlled URL."
     },
     code: `@GetMapping("/sixth-sense")
     public ResponseEntity<String> fetchIpv6(@RequestParam String url) {
         if (
-            url.contains("127.0.0.1") ||
-            url.contains("localhost") ||
-            url.matches(".*\\b(\\d{1,3}\\.){3}\\d{1,3}(:\\d+)?\\b.*") || // IPv4 dotted decimal
-            url.matches(".*\\b\\d{7,10}(:\\d+)?\\b.*") // Decimal notation
+            url.contains("127.0.0.1") || url.contains("localhost") || url.matches(".*\\b(\\d{1,3}\\.){3}\\d{1,3}(:\\d+)?\\b.*") || url.matches(".*\\b\\d{7,10}(:\\d+)?\\b.*")
         ) {
             return ResponseEntity.badRequest().body("Blocked by blacklist: IPv4 addresses and localhost are not allowed");
         }
@@ -124,28 +129,29 @@ export const challenges: Challenge[] = [
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }`,
-    labUrl: "/sixth-sense?url=here"
+    labUrl: "/sixth-sense?url=here",
+    maxSelectableLines: 4
   },
   {
     id: "CHALLENGE4",
     title: "Name Game",
     description: "The server fetches DNS data from a user-supplied URL, but can you trick it into talking to internal systems?",
     difficulty: "intermediate",
-    vulnerableLines: [18],
+    vulnerableLines: [3, 15, 18, 21],
     hints: [
       "Think about the security of DNS lookups.",
       "Check how the server handles the user-provided URL.",
       "Is there any protection against internal IP resolution?"
     ],
     explanations: {
+      3: "Blacklist approach vulnerable to bypasses",
+      15: "Replaces hostname with IP but doesn't block internal IPs—enables SSRF after DNS resolution.",
       18: "This lets user input control the final destination after DNS resolution.",
+      21: "Sends server-side request to attacker-controlled URL."
     },
     code: `@GetMapping("/name-game")
 public ResponseEntity<String> fetchDns(@RequestParam String url) {
-    if (
-        url.matches(".*\\b(\\d{1,3}\\.){3}\\d{1,3}(:\\d+)?\\b.*") ||
-        url.matches(".*\\b\\d{7,10}(:\\d+)?\\b.*") ||
-        url.matches(".*\\[.*:.*:.*\\].*")
+    if (url.matches(".*\\b(\\d{1,3}\\.){3}\\d{1,3}(:\\d+)?\\b.*") || url.matches(".*\\b\\d{7,10}(:\\d+)?\\b.*") || url.matches(".*\\[.*:.*:.*\\].*") || url.contains("127.0.0.1")  || url.contains("localhost")
     ) {
         return ResponseEntity.badRequest().body("Blocked by blacklist: direct IP addresses are not allowed");
     }
@@ -169,6 +175,7 @@ public ResponseEntity<String> fetchDns(@RequestParam String url) {
         return ResponseEntity.badRequest().body("Error: " + e.getMessage());
     }
 }`,
-    labUrl: "/name-game?url=here"
+    labUrl: "/name-game?url=here",
+    maxSelectableLines: 4
   }
 ]

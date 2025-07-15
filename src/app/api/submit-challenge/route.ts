@@ -6,8 +6,14 @@ import { PrismaClient } from '@/generated/prisma'
 const prisma = new PrismaClient()
 
 export async function POST(req: NextRequest) {
-  const { name, avatar, challengeId, selectedLine } = await req.json();
-  if (typeof name !== 'string' || typeof avatar !== 'string' || typeof challengeId !== 'string' || typeof selectedLine !== 'number') {
+  const { name, avatar, challengeId, selectedLines } = await req.json();
+  if (
+    typeof name !== 'string' ||
+    typeof avatar !== 'string' ||
+    typeof challengeId !== 'string' ||
+    !Array.isArray(selectedLines) ||
+    !selectedLines.every((n) => typeof n === 'number')
+  ) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
@@ -23,11 +29,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Challenge is locked' }, { status: 423 });
   }
 
-  // Validate the answer
-  const isCorrect = challenge.vulnerableLines.includes(selectedLine);
+  // Enforce maxSelectableLines
+  if (typeof challenge.maxSelectableLines === 'number' && selectedLines.length > challenge.maxSelectableLines) {
+    return NextResponse.json({ error: `You can select at most ${challenge.maxSelectableLines} lines for this challenge.` }, { status: 400 });
+  }
+
+  // Validate the answer: all and only vulnerable lines must be selected
+  const vulnerableLines = challenge.vulnerableLines;
+  const selectedSet = new Set(selectedLines);
+  const vulnerableSet = new Set(vulnerableLines);
+  const allCorrect =
+    selectedLines.length === vulnerableLines.length &&
+    selectedLines.every((line) => vulnerableSet.has(line));
+
+  // Per-line feedback (only for selected lines)
+  const feedback = selectedLines.map((line) => {
+    if (vulnerableSet.has(line)) return { line, status: 'correct' };
+    return { line, status: 'incorrect' };
+  });
+// (No missed lines in feedback)
 
   // Check if user already solved this challenge correctly
-  if (isCorrect) {
+  if (allCorrect) {
     const alreadySolved = await prisma.challengeSubmission.findFirst({
       where: {
         userName: name,
@@ -55,13 +78,13 @@ export async function POST(req: NextRequest) {
     }, { status: 403 });
   }
 
-  // Store the submission
+  // Store the submission (store selectedLines as JSON)
   await prisma.challengeSubmission.create({
     data: {
       userName: name,
       challengeId,
-      selectedLine,
-      correct: isCorrect,
+      selectedLines: JSON.stringify(selectedLines),
+      correct: allCorrect,
     },
   });
 
@@ -72,7 +95,7 @@ export async function POST(req: NextRequest) {
 
   // Update the leaderboard score if correct
   let user;
-  if (isCorrect) {
+  if (allCorrect) {
     // +1 for correct
     user = await prisma.leaderboardUser.upsert({
       where: { name },
@@ -88,5 +111,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ correct: isCorrect, score: user.score, attemptsUsed: attemptsAfter, attemptsRemaining: Math.max(0, maxAttempts - attemptsAfter) });
+  return NextResponse.json({
+    correct: allCorrect,
+    score: user.score,
+    attemptsUsed: attemptsAfter,
+    attemptsRemaining: Math.max(0, maxAttempts - attemptsAfter),
+    feedback,
+  });
 } 
