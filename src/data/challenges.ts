@@ -16,7 +16,7 @@ export const challenges: Challenge[] = [
       3: "Good work"
     },
     "code": "@GetMapping(\"/hello-world\")\npublic ResponseEntity<String> helloWorld() {\n    return ResponseEntity.ok(\"I am vulnerable line!\");\n}",
-    labUrl: "https://google.com",
+    labUrl: "/demo",
     maxSelectableLines: 1
   },  
   // BEGINNER CHALLENGES
@@ -177,5 +177,31 @@ public ResponseEntity<String> fetchDns(@RequestParam String url) {
 }`,
     labUrl: "/name-game?url=here",
     maxSelectableLines: 4
+  },
+  {
+    id: "CHALLENGE5",
+    title: "Real World",
+    description: "Real world live exploitation",
+    difficulty: "intermediate",
+    vulnerableLines: [5],
+    hints: [
+      "Can we use file protocol ?",
+      "There is a flag in tmp directory"
+    ],
+    explanations: {
+      5: "Using unsanitize user input is directly passed in curl_exec() function",
+    },
+    code: `<?php
+if (isset($_GET['url'])) {
+    $ch = curl_init($_GET['url']);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $output = curl_exec($ch);
+    curl_close($ch);
+    echo "<pre>" . htmlspecialchars($output) . "</pre>";
+} else {
+    echo "Please provide a URL.";
+}`,
+    labUrl: "https://anirbantextiles.com/huntme.php",
+    maxSelectableLines: 1
   }
 ]

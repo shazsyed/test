@@ -617,7 +617,7 @@ export default function CodeReviewChallenge() {
 
   // Attempts state
   const [attemptsUsed, setAttemptsUsed] = useState(0);
-  const [attemptsRemaining, setAttemptsRemaining] = useState(2);
+  const [attemptsRemaining, setAttemptsRemaining] = useState(4);
 
   // Open Lab state
   const [openLabChallenge, setOpenLabChallenge] = useState<string | null>(null);
@@ -779,7 +779,7 @@ export default function CodeReviewChallenge() {
         setAttemptsRemaining(data.attemptsRemaining);
       } else {
         setAttemptsUsed(0);
-        setAttemptsRemaining(2);
+        setAttemptsRemaining(4);
       }
     };
     fetchAttempts();

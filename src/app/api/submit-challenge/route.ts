@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   const attempts = await prisma.challengeSubmission.count({
     where: { userName: name, challengeId },
   });
-  const maxAttempts = 2;
+  const maxAttempts = 4;
   const attemptsRemaining = Math.max(0, maxAttempts - attempts);
 
   if (attempts >= maxAttempts) {
